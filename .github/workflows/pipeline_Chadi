@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'MONTH', description: 'Enter the month (October, November, December)')
+    }
+    stages {
+        stage('Plan') {
+            steps {
+                script {
+                    def month = "${params.MONTH}"
+                    echo "Planning tasks for $month"
+                }
+            }
+        }
+
+        stage('Design') {
+            steps {
+                script {
+                    def month = "${params.MONTH}"
+                    echo "Designing features for $month"
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    def month = "${params.MONTH}"
+                    echo "Testing tasks for $month"
+                }
+            }
+        }
+
+        stage('Deliver') {
+            steps {
+                script {
+                    def month = "${params.MONTH}"
+                    echo "Delivering features for $month"
+                }
+            }
+        }
+    }
+}
