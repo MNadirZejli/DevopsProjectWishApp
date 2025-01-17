@@ -2,13 +2,13 @@
 
 ## Team Members
 
-Mohamed-Nadir ZEJLI
+Mohamed-Nadir ZEJLI (Github Manager)
 
-Chadi ZABOUJ
+Chadi ZABOUJ (Pipeline Engineer)
 
-Hamza HANINE
+Hamza HANINE (Team lead)
 
-Adil MAAYOU
+Adil MAAYOU (Documentation Specialist)
 
 **Description**  
 This project applies DevOps principles to create pipelines and user stories for an application that helps users achieve their New Year resolutions. By focusing on CI/CD pipelines using Jenkins and managing user stories in GitHub, this project demonstrates effective collaboration and Agile practices.
