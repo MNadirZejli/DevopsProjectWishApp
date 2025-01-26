@@ -1,25 +1,22 @@
-pipeline {
+pipeline { 
     agent any
-    
+
     parameters {
         string(name: 'MONTH', description: 'Enter the month (July, August, September)')
         choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Select deployment environment')
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run automated tests?')
     }
-    
-    environment {
-        BUILD_TIMESTAMP = sh(script: 'date "+%Y-%m-%d %H:%M:%S"', returnStdout: true).trim()
-    }
-    
+
     stages {
         stage('Validate') {
             steps {
                 script {
+                    env.BUILD_TIMESTAMP = sh(script: 'date "+%Y-%m-%d %H:%M:%S"', returnStdout: true).trim()
                     def validMonths = ['July', 'August', 'September']
-                    if (!validMonths.contains("${params.MONTH}")) {
+                    if (!validMonths.contains(params.MONTH)) {
                         error "Invalid month: ${params.MONTH}. Please select July, August, or September."
                     }
-                    echo "Starting pipeline for ${params.MONTH} in ${params.ENVIRONMENT} environment at ${BUILD_TIMESTAMP}"
+                    echo "Starting pipeline for ${params.MONTH} in ${params.ENVIRONMENT} environment at ${env.BUILD_TIMESTAMP}"
                 }
             }
         }
@@ -27,22 +24,20 @@ pipeline {
         stage('Plan') {
             steps {
                 script {
-                    def month = "${params.MONTH}"
-                    echo "Planning tasks for $month"
-                    
-                    writeFile file: "${month}_plan.txt", text: "Planning document for ${month}"
-                    
-                    if (month == 'July') {
-                        echo "Planning summer event tracking system for $month"
+                    echo "Planning tasks for ${params.MONTH}"
+                    writeFile file: "${params.MONTH}_plan.txt", text: "Planning document for ${params.MONTH}"
+
+                    if (params.MONTH == 'July') {
+                        echo "Planning summer event tracking system for ${params.MONTH}"
                         writeFile file: "summer_events.json", text: '{"events": []}'
-                    } else if (month == 'August') {
-                        echo "Planning vacation photo organization for $month"
+                    } else if (params.MONTH == 'August') {
+                        echo "Planning vacation photo organization for ${params.MONTH}"
                         writeFile file: "photo_structure.json", text: '{"albums": []}'
-                    } else if (month == 'September') {
-                        echo "Planning fall activity scheduler for $month"
+                    } else if (params.MONTH == 'September') {
+                        echo "Planning fall activity scheduler for ${params.MONTH}"
                         writeFile file: "fall_schedule.json", text: '{"activities": []}'
                     }
-                    archiveArtifacts artifacts: "*.json,*_plan.txt", allowEmptyArchive: true
+                    archiveArtifacts artifacts: "*.json, *_plan.txt"
                 }
             }
         }
@@ -50,49 +45,46 @@ pipeline {
         stage('Design') {
             steps {
                 script {
-                    def month = "${params.MONTH}"
-                    echo "Designing features for $month in ${params.ENVIRONMENT} environment"
-                    
-                    if (month == 'July') {
-                        echo "Designing summer event tracking UI for $month"
-                        sh 'mkdir -p designs/summer'
-                    } else if (month == 'August') {
-                        echo "Creating photo album organization interface for $month"
-                        sh 'mkdir -p designs/photos'
-                    } else if (month == 'September') {
-                        echo "Designing fall activity calendar for $month"
-                        sh 'mkdir -p designs/fall'
+                    echo "Designing features for ${params.MONTH} in ${params.ENVIRONMENT} environment"
+                    def designDir = ""
+                    if (params.MONTH == 'July') {
+                        designDir = "designs/summer"
+                    } else if (params.MONTH == 'August') {
+                        designDir = "designs/photos"
+                    } else if (params.MONTH == 'September') {
+                        designDir = "designs/fall"
                     }
+                    sh "mkdir -p ${designDir}"
+                    echo "Design directory created: ${designDir}"
                 }
             }
         }
         
         stage('Test') {
             when {
-                expression { params.RUN_TESTS == true }
+                expression { params.RUN_TESTS }
             }
             steps {
                 script {
-                    def month = "${params.MONTH}"
-                    echo "Testing tasks for $month"
-                    
+                    echo "Testing tasks for ${params.MONTH}"
+                    def testLog = "test_results.log"
                     try {
-                        if (month == 'July') {
-                            echo "Testing event creation and management for $month"
-                            sh 'echo "Running summer event tests..." > test_results.log'
-                        } else if (month == 'August') {
-                            echo "Testing photo upload and organization for $month"
-                            sh 'echo "Running photo management tests..." > test_results.log'
-                        } else if (month == 'September') {
-                            echo "Testing activity scheduling and notifications for $month"
-                            sh 'echo "Running scheduler tests..." > test_results.log'
+                        if (params.MONTH == 'July') {
+                            echo "Testing event creation and management for ${params.MONTH}"
+                            sh "echo 'Running summer event tests...' > ${testLog}"
+                        } else if (params.MONTH == 'August') {
+                            echo "Testing photo upload and organization for ${params.MONTH}"
+                            sh "echo 'Running photo management tests...' > ${testLog}"
+                        } else if (params.MONTH == 'September') {
+                            echo "Testing activity scheduling and notifications for ${params.MONTH}"
+                            sh "echo 'Running scheduler tests...' > ${testLog}"
                         }
-                    } catch (Exception e) {
+                    } catch (err) {
                         currentBuild.result = 'UNSTABLE'
-                        echo "Tests completed with warnings: ${e.message}"
+                        echo "Tests completed with warnings: ${err.message}"
+                    } finally {
+                        archiveArtifacts artifacts: testLog
                     }
-                    
-                    archiveArtifacts artifacts: 'test_results.log', allowEmptyArchive: true
                 }
             }
         }
@@ -100,34 +92,23 @@ pipeline {
         stage('Deliver') {
             steps {
                 script {
-                    def month = "${params.MONTH}"
-                    echo "Delivering features for $month to ${params.ENVIRONMENT}"
-                    
-                    // Simulate deployment process
+                    echo "Delivering features for ${params.MONTH} to ${params.ENVIRONMENT}"
+                    def deploymentLog = "deployment.log"
                     sh """
-                        echo "Deployment started at \$(date)" > deployment.log
-                        echo "Environment: ${params.ENVIRONMENT}" >> deployment.log
-                        echo "Month: ${month}" >> deployment.log
-                        echo "Deployment completed at \$(date)" >> deployment.log
+                        echo "Deployment started at \$(date)" > ${deploymentLog}
+                        echo "Environment: ${params.ENVIRONMENT}" >> ${deploymentLog}
+                        echo "Month: ${params.MONTH}" >> ${deploymentLog}
+                        echo "Deployment completed at \$(date)" >> ${deploymentLog}
                     """
-                    
-                    if (month == 'July') {
-                        echo "Deploying summer event tracker for $month"
-                    } else if (month == 'August') {
-                        echo "Deploying photo organization system for $month"
-                    } else if (month == 'September') {
-                        echo "Deploying fall activity scheduler for $month"
-                    }
-                    
-                    archiveArtifacts artifacts: 'deployment.log', allowEmptyArchive: true
+                    archiveArtifacts artifacts: deploymentLog
                 }
             }
         }
     }
-    
+
     post {
         always {
-            echo "Pipeline completed at ${BUILD_TIMESTAMP}"
+            echo "Pipeline completed at ${env.BUILD_TIMESTAMP}"
             cleanWs()
         }
         success {
@@ -135,7 +116,7 @@ pipeline {
         }
         failure {
             echo "Pipeline failed! Check logs for details."
-            emailext (
+            emailext(
                 subject: "Pipeline Failed: ${currentBuild.fullDisplayName}",
                 body: "Pipeline failed for ${params.MONTH} in ${params.ENVIRONMENT} environment.",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']]
